@@ -10,7 +10,6 @@ if (isset($_GET['return_id'])) {
     $mysqli->query("UPDATE books SET stocks = stocks + 1 WHERE id = $book_id");
 
     // 2. Remove from active borrowers (or update status to 'Returned')
-    // For this version, we will delete the record as per your original logic
     $mysqli->query("DELETE FROM borrowers WHERE id = $borrower_id");
 
     header("Location: borrowers.php?msg=returned");

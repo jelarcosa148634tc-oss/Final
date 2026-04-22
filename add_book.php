@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $format    = $mysqli->real_escape_string($_POST['format']);
     $location  = $mysqli->real_escape_string($_POST['location']);
 
-    // --- NEW: Check if ISBN already exists ---
+    //Check if ISBN already exists ---
     $check_isbn = $mysqli->query("SELECT id FROM books WHERE isbn = '$isbn'");
     
     if ($check_isbn->num_rows > 0) {

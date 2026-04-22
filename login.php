@@ -7,19 +7,17 @@ $error = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
-
-    // Security check: Use prepared statements to prevent SQL Injection
+    
     $stmt = $mysqli->prepare("SELECT UserID, Email, Password, Role FROM tb_Credentials WHERE Email = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
-    // Check the password (using the exact column name 'Password')
     if ($password == $row['Password']) { 
         $_SESSION["loggedin"] = true;
-        $_SESSION["id"] = $row['UserID'];    // Matches 'UserID' from SELECT
-        $_SESSION["username"] = $row['Email']; // Matches 'Email' from SELECT
+        $_SESSION["id"] = $row['UserID'];  
+        $_SESSION["username"] = $row['Email']; 
         header("location: index.php"); 
         exit;
     } else {
