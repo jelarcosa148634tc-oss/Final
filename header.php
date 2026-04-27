@@ -306,6 +306,8 @@ if (!isset($_SESSION["loggedin"]) && basename($_SERVER['PHP_SELF']) != 'login.ph
         
         <a href="borrowers.php" class="<?php echo ($current_page == 'borrowers.php' || $current_page == 'borrow_book.php') ? 'btn-home' : ''; ?>">Borrowers</a>
         
+        <a href="add_student.php" class="<?php echo ($current_page == 'add_student.php') ? 'btn-home' : ''; ?>">Registration</a>
+
         <a href="reports.php" class="<?php echo ($current_page == 'reports.php') ? 'btn-home' : ''; ?>">Reports</a>
         
         <a href="logout.php" style="color: #ff6b6b !important;">Logout</a>

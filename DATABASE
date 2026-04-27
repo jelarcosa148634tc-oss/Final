@@ -1,6 +1,8 @@
+SET FOREIGN_KEY_CHECKS = 0;
 DROP DATABASE IF EXISTS tnts_library_db;
 CREATE DATABASE tnts_library_db;
 USE tnts_library_db;
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE tb_Credentials (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
@@ -9,9 +11,18 @@ CREATE TABLE tb_Credentials (
     Role VARCHAR(50) DEFAULT 'Librarian'
 );
 
+CREATE TABLE students (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    course VARCHAR(100),
+    contact_number VARCHAR(20),       
+    email VARCHAR(100) NOT NULL UNIQUE      
+) AUTO_INCREMENT = 1;
+
 CREATE TABLE books (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    isbn VARCHAR(20) NOT NULL UNIQUE, -- The UNIQUE constraint prevents duplicates
+    isbn VARCHAR(20) NOT NULL UNIQUE,        
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
     publisher VARCHAR(100),
@@ -25,13 +36,15 @@ CREATE TABLE books (
 
 CREATE TABLE borrowers (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    book_borrowed VARCHAR(255),
+    student_id INT,
     book_id INT,
+    book_borrowed VARCHAR(255),
     date_borrowed DATETIME DEFAULT CURRENT_TIMESTAMP,
+    due_date DATE,                       
+    return_date DATETIME NULL,           
     status VARCHAR(50) DEFAULT 'Borrowed',
-    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE SET NULL
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
 
 CREATE TABLE reports (
@@ -42,6 +55,38 @@ CREATE TABLE reports (
     generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 INSERT INTO tb_Credentials (Email, Password, Role) 
 VALUES ('admin', 'admin', 'Admin');
 
+INSERT INTO books (isbn, title, author, genre, stocks, location, format) 
+VALUES 
+('111-111', 'Effective Java', 'Joshua Bloch', 'Software Engineering', 2, 'Shelf A', 'Paperback'),
+('222-222', 'Designing Data-Intensive Applications', 'Martin Kleppmann', 'System Design', 2, 'Shelf B', 'Hardcover'),
+('333-333', 'Introduction to Algorithms', 'Thomas H. Cormen', 'Computer Science', 1, 'Shelf A', 'Hardcover'),
+('444-444', 'Python Crash Course', 'Eric Matthes', 'Programming', 1, 'Shelf C', 'Paperback'),
+('555-555', 'The Pragmatic Programmer', 'David Thomas', 'Software Engineering', 1, 'Shelf B', 'Hardcover'),
+('666-666', 'Head First Design Patterns', 'Eric Freeman', 'Software Engineering', 1, 'Shelf A', 'Paperback'),
+('777-777', 'High Performance MySQL', 'Silvia Botros', 'Databases', 1, 'Shelf B', 'Paperback'),
+('888-888', 'Deep Learning with Python', 'Francois Chollet', 'Artificial Intelligence', 1, 'Shelf C', 'Hardcover'),
+('999-999', 'Linux Pocket Guide', 'Daniel J. Barrett', 'Operating Systems', 1, 'Shelf C', 'Paperback'),
+('978-013', 'Artificial Intelligence: A Modern Approach', 'Stuart Russell', 'Artificial Intelligence', 1, 'Shelf A', 'Hardcover'),
+('978-103', 'Mastering Python', 'Michael Chen', 'Programming', 8, 'Shelf C', 'Paperback'),
+('978-104', 'Cloud Computing Basics', 'Sarah Jenkins', 'Technology', 4, 'Shelf A', 'Hardcover'),
+('978-105', 'Artificial Intelligence Simplified', 'Kevin Park', 'Computer Science', 10, 'Shelf D', 'E-book'),
+('978-106', 'The DevOps Handbook', 'Elena Rodriguez', 'Software Engineering', 2, 'Shelf B', 'Paperback'),
+('978-107', 'Ethical Hacking Guide', 'David Miller', 'Cybersecurity', 6, 'Shelf E', 'Hardcover'),
+('978-108', 'Web Development with React', 'Aisha Khan', 'Technology', 7, 'Shelf C', 'Paperback'),
+('978-109', 'Machine Learning in Practice', 'Robert Black', 'Computer Science', 5, 'Shelf D', 'Hardcover');
+
+
+INSERT INTO students (first_name, last_name, course, contact_number, email)
+VALUES 
+('Nii', 'Ashxier', 'BSIT', '0911111', 'NiiAshxier@gmail.com'),
+('Achilles jd', 'Delosmo', 'BSCS', '09222222', 'AchillesjdDelosmo@gmail.com'),
+('Charrese', 'Villanueva', 'BSIT', '09777777', 'CharreseVillanueva@gmail.com'),
+('Stephen John', 'Bregole', 'BSCS', '09333333', 'StephenJohnBregole@gmail.com'),
+('Hyacintmay', 'Hayag', 'BSCE', '09444444', 'HyacintmayHayag@gmail.com'),
+('Jake', 'Calamba', 'BSIT', '09555555', 'JakeCalambagmail.com'),
+('Louie', 'Lagmay', 'BSIT', '09666666', 'LouieLagmay@gmail.com'),
+('Jhonrhane', 'Elarcosa', 'BSIT', '09888888', 'JhonrhaneElarcosa@gmail.com');
