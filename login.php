@@ -1,37 +1,51 @@
 <?php
 session_start();
 require_once "config.php";
-
 $error = "";
+$sticky_user = ""; // Variable to hold the LRN/Email if login fails
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $password = trim($_POST["password"]);
+    $sticky_user = $username; // Save it here for sticky behavior
     
-    $stmt = $mysqli->prepare("SELECT UserID, Email, Password, Role FROM tb_Credentials WHERE Email = ?");
+    // 1. Check Admin Table
+    $stmt = $mysqli->prepare("SELECT UserID, Email, Password FROM tb_Credentials WHERE Email = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $res = $stmt->get_result();
 
-    if ($row = $result->fetch_assoc()) {
-    if ($password == $row['Password']) { 
-        $_SESSION["loggedin"] = true;
-        $_SESSION["id"] = $row['UserID'];  
-        $_SESSION["username"] = $row['Email']; 
-        header("location: index.php"); 
-        exit;
-    } else {
-        $error = "Invalid password.";
+    if ($row = $res->fetch_assoc()) {
+        if ($password == $row['Password']) {
+            $_SESSION["loggedin"] = true;
+            $_SESSION["role"] = "admin";
+            $_SESSION["username"] = $row['Email'];
+            header("location: index.php");
+            exit;
+        }
     }
-}
+
+    // 2. Check Student Table
+    $stmt = $mysqli->prepare("SELECT StudentID, FirstName, Password FROM tb_StudentCredentials WHERE StudentID = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    if ($row = $res->fetch_assoc()) {
+        if ($password == $row['Password']) {
+            $_SESSION["loggedin"] = true;
+            $_SESSION["role"] = "student";
+            $_SESSION["username"] = $row['FirstName'];
+            $_SESSION["lrn"] = $row['StudentID'];
+            header("location: student_index.php");
+            exit;
+        }
+    }
+    $error = "Invalid LRN/Email or Password.";
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Librarian Login</title>
+<body>
     <style>
         :root {
             --primary-blue: #003366;
@@ -116,13 +130,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 20px;
         }
     </style>
-</head>
-
-<body>
-
     <div class="login-card">
-        <h2>Librarian Login</h2>
-        <p>Enter credentials to access the Management System.</p>
+        <h2>TNTS Login</h2>
+        <p>Enter your credentials to access the library.</p>
 
         <?php if (!empty($error)): ?>
             <div class="alert-error"><?php echo htmlspecialchars($error); ?></div>
@@ -130,17 +140,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form method="POST" action="login.php">
             <div class="input-group">
-                <label>Username</label>
-                <input type="text" name="username" placeholder="Enter username" required>
+                <label>Student LRN / Admin Email</label>
+                <input type="text" name="username" value="<?php echo htmlspecialchars($sticky_user); ?>" placeholder="Enter LRN or Email" required>
             </div>
             <div class="input-group">
                 <label>Password</label>
                 <input type="password" name="password" placeholder="Enter password" required>
             </div>
-            <button type="submit" class="btn-login">Access Dashboard</button>
+            <button type="submit" class="btn-login">Login to Portal</button>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <span style="font-size: 0.9rem;">New student?</span><br>
+                <a href="signup.php" style="color: #007bff; text-decoration: none; font-weight: bold;">Create Student Account</a>
+            </div>
         </form>
     </div>
-
 </body>
-
-</html>

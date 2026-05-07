@@ -4,6 +4,14 @@ CREATE DATABASE tnts_library_db;
 USE tnts_library_db;
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- 1. Setup Database
+SET FOREIGN_KEY_CHECKS = 0;
+DROP DATABASE IF EXISTS tnts_library_db;
+CREATE DATABASE tnts_library_db;
+USE tnts_library_db;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 2. Admin/Librarian Credentials
 CREATE TABLE tb_Credentials (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
     Email VARCHAR(100) NOT NULL UNIQUE,
@@ -11,42 +19,59 @@ CREATE TABLE tb_Credentials (
     Role VARCHAR(50) DEFAULT 'Librarian'
 );
 
+-- 3. Student Signup Table (The "Unverified" data)
+CREATE TABLE tb_StudentCredentials (
+    StudentID VARCHAR(50) PRIMARY KEY, -- LRN
+    FirstName VARCHAR(100) NOT NULL,
+    LastName VARCHAR(100) NOT NULL,
+    Gmail VARCHAR(255) NOT NULL UNIQUE, -- Unique Gmail as requested
+    Password VARCHAR(255) NOT NULL,
+    Role VARCHAR(20) DEFAULT 'student',
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Official Student Registry (The "Verified" data)
 CREATE TABLE students (
-    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id VARCHAR(50) PRIMARY KEY, -- Matches tb_StudentCredentials StudentID
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    course VARCHAR(100),
-    contact_number VARCHAR(20),       
-    email VARCHAR(100) NOT NULL UNIQUE      
-) AUTO_INCREMENT = 1;
+    grade_level INT,
+    strand VARCHAR(50),
+    section VARCHAR(50),
+    adviser VARCHAR(100),
+    contact_number VARCHAR(20),
+    email VARCHAR(100) NOT NULL UNIQUE
+);
 
+-- 5. Book Inventory
 CREATE TABLE books (
     id INT PRIMARY KEY AUTO_INCREMENT,
     isbn VARCHAR(20) NOT NULL UNIQUE,        
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    publisher VARCHAR(100),
-    pub_year INT,
     genre VARCHAR(50),
     stocks INT DEFAULT 1,
-    location VARCHAR(50),
     format VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'Available'
+    location VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'Available',
+    image VARCHAR(255) DEFAULT NULL
 );
 
+-- 6. Borrowing Transactions
 CREATE TABLE borrowers (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    student_id INT,
-    book_id INT,
-    book_borrowed VARCHAR(255),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50) NOT NULL,
+    book_id INT NOT NULL,
+    book_borrowed VARCHAR(255) NOT NULL,
     date_borrowed DATETIME DEFAULT CURRENT_TIMESTAMP,
-    due_date DATE,                       
-    return_date DATETIME NULL,           
-    status VARCHAR(50) DEFAULT 'Borrowed',
-    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
-);
+    due_date DATE NOT NULL,
+    return_date DATETIME NULL,
+    status ENUM('Borrowed', 'Returned') DEFAULT 'Borrowed',
+    INDEX (student_id),
+    INDEX (book_id)
+) ENGINE=InnoDB;
 
+-- 7. Reports
 CREATE TABLE reports (
     id INT PRIMARY KEY AUTO_INCREMENT,
     report_title VARCHAR(255),
@@ -55,38 +80,70 @@ CREATE TABLE reports (
     generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- SEED DATA (SAMPLE RECORDS)
 
-INSERT INTO tb_Credentials (Email, Password, Role) 
-VALUES ('admin', 'admin', 'Admin');
+-- Admin Account
+INSERT INTO tb_Credentials (Email, Password, Role) VALUES ('admin', 'admin', 'Admin');
 
-INSERT INTO books (isbn, title, author, genre, stocks, location, format) 
-VALUES 
-('111-111', 'Effective Java', 'Joshua Bloch', 'Software Engineering', 2, 'Shelf A', 'Paperback'),
-('222-222', 'Designing Data-Intensive Applications', 'Martin Kleppmann', 'System Design', 2, 'Shelf B', 'Hardcover'),
-('333-333', 'Introduction to Algorithms', 'Thomas H. Cormen', 'Computer Science', 1, 'Shelf A', 'Hardcover'),
-('444-444', 'Python Crash Course', 'Eric Matthes', 'Programming', 1, 'Shelf C', 'Paperback'),
-('555-555', 'The Pragmatic Programmer', 'David Thomas', 'Software Engineering', 1, 'Shelf B', 'Hardcover'),
-('666-666', 'Head First Design Patterns', 'Eric Freeman', 'Software Engineering', 1, 'Shelf A', 'Paperback'),
-('777-777', 'High Performance MySQL', 'Silvia Botros', 'Databases', 1, 'Shelf B', 'Paperback'),
-('888-888', 'Deep Learning with Python', 'Francois Chollet', 'Artificial Intelligence', 1, 'Shelf C', 'Hardcover'),
-('999-999', 'Linux Pocket Guide', 'Daniel J. Barrett', 'Operating Systems', 1, 'Shelf C', 'Paperback'),
-('978-013', 'Artificial Intelligence: A Modern Approach', 'Stuart Russell', 'Artificial Intelligence', 1, 'Shelf A', 'Hardcover'),
-('978-103', 'Mastering Python', 'Michael Chen', 'Programming', 8, 'Shelf C', 'Paperback'),
-('978-104', 'Cloud Computing Basics', 'Sarah Jenkins', 'Technology', 4, 'Shelf A', 'Hardcover'),
-('978-105', 'Artificial Intelligence Simplified', 'Kevin Park', 'Computer Science', 10, 'Shelf D', 'E-book'),
-('978-106', 'The DevOps Handbook', 'Elena Rodriguez', 'Software Engineering', 2, 'Shelf B', 'Paperback'),
-('978-107', 'Ethical Hacking Guide', 'David Miller', 'Cybersecurity', 6, 'Shelf E', 'Hardcover'),
-('978-108', 'Web Development with React', 'Aisha Khan', 'Technology', 7, 'Shelf C', 'Paperback'),
-('978-109', 'Machine Learning in Practice', 'Robert Black', 'Computer Science', 5, 'Shelf D', 'Hardcover');
+-- 20 Sample Books
+INSERT INTO books (isbn, title, author, genre, stocks, location, format) VALUES 
+('978-001', 'Fundamentals of Computing', 'Alan Turing', 'Computer Science', 5, 'Shelf A', 'Hardcover'),
+('978-002', 'Clean Code', 'Robert C. Martin', 'Software Engineering', 3, 'Shelf B', 'Paperback'),
+('978-003', 'The Great Gatsby', 'F. Scott Fitzgerald', 'Literature', 2, 'Shelf C', 'Paperback'),
+('978-004', 'To Kill a Mockingbird', 'Harper Lee', 'Classic', 2, 'Shelf C', 'Hardcover'),
+('978-005', 'Physics for Scientists', 'Raymond Serway', 'Science', 10, 'Shelf D', 'Hardcover'),
+('978-006', 'Organic Chemistry', 'David Klein', 'Science', 4, 'Shelf D', 'Paperback'),
+('978-007', 'Principles of Economics', 'N. Gregory Mankiw', 'Economics', 6, 'Shelf E', 'Hardcover'),
+('978-008', 'The Art of War', 'Sun Tzu', 'Philosophy', 1, 'Shelf E', 'Paperback'),
+('978-009', 'Eloquent JavaScript', 'Marijn Haverbeke', 'Programming', 8, 'Shelf A', 'Paperback'),
+('978-010', 'Calculus: Early Transcendentals', 'James Stewart', 'Mathematics', 12, 'Shelf D', 'Hardcover'),
+('978-011', 'HTML and CSS Design', 'Jon Duckett', 'Web Development', 5, 'Shelf A', 'Paperback'),
+('978-012', 'The Catcher in the Rye', 'J.D. Salinger', 'Classic', 3, 'Shelf C', 'Paperback'),
+('978-013', 'A Brief History of Time', 'Stephen Hawking', 'Science', 2, 'Shelf D', 'Paperback'),
+('978-014', 'Don Quixote', 'Miguel de Cervantes', 'Literature', 1, 'Shelf C', 'Hardcover'),
+('978-015', 'Sapiens: A Brief History', 'Yuval Noah Harari', 'History', 4, 'Shelf E', 'Paperback'),
+('978-016', 'Introduction to Psychology', 'James Kalat', 'Social Science', 3, 'Shelf E', 'Hardcover'),
+('978-017', 'Biology: Global Approach', 'Neil Campbell', 'Science', 5, 'Shelf D', 'Hardcover'),
+('978-018', 'Database System Concepts', 'Abraham Silberschatz', 'Databases', 4, 'Shelf B', 'Hardcover'),
+('978-019', 'Algorithms Unlocked', 'Thomas Cormen', 'Computer Science', 6, 'Shelf B', 'Paperback'),
+('978-020', 'Thinking, Fast and Slow', 'Daniel Kahneman', 'Psychology', 2, 'Shelf E', 'Paperback');
 
+-- 20 Sample Students (Split between Signups and Official Registry)
+-- These 10 have signed up but NOT yet verified (will show Orange in your system)
+INSERT INTO tb_StudentCredentials (StudentID, FirstName, LastName, Gmail, Password) VALUES 
+('2024-001', 'Juan', 'Dela Cruz', 'juan.delacruz@gmail.com', '123'),
+('2024-002', 'Maria', 'Santos', 'maria.santos@gmail.com', '123'),
+('2024-003', 'Pedro', 'Penduko', 'pedro.p@gmail.com', '123'),
+('2024-004', 'Elena', 'Gilbert', 'elena.g@gmail.com', '123'),
+('2024-005', 'Kevin', 'Ramos', 'kevin.ramos@gmail.com', '123'),
+('2024-006', 'Sarah', 'Conor', 'sarah.c@gmail.com', '123'),
+('2024-007', 'Michael', 'Scott', 'm.scott@gmail.com', '123'),
+('2024-008', 'Pam', 'Beesly', 'pam.b@gmail.com', '123'),
+('2024-009', 'Jim', 'Halpert', 'jim.h@gmail.com', '123'),
+('2024-010', 'Dwight', 'Schrute', 'dwight.s@gmail.com', '123');
 
-INSERT INTO students (first_name, last_name, course, contact_number, email)
-VALUES 
-('Nii', 'Ashxier', 'BSIT', '0911111', 'NiiAshxier@gmail.com'),
-('Achilles jd', 'Delosmo', 'BSCS', '09222222', 'AchillesjdDelosmo@gmail.com'),
-('Charrese', 'Villanueva', 'BSIT', '09777777', 'CharreseVillanueva@gmail.com'),
-('Stephen John', 'Bregole', 'BSCS', '09333333', 'StephenJohnBregole@gmail.com'),
-('Hyacintmay', 'Hayag', 'BSCE', '09444444', 'HyacintmayHayag@gmail.com'),
-('Jake', 'Calamba', 'BSIT', '09555555', 'JakeCalambagmail.com'),
-('Louie', 'Lagmay', 'BSIT', '09666666', 'LouieLagmay@gmail.com'),
-('Jhonrhane', 'Elarcosa', 'BSIT', '09888888', 'JhonrhaneElarcosa@gmail.com');
+-- These 10 are already Registered in the Library (will show Green in your system)
+-- We insert them into BOTH tables so they can log in AND appear in the registry
+INSERT INTO tb_StudentCredentials (StudentID, FirstName, LastName, Gmail, Password) VALUES 
+('101001', 'Nii', 'Ashxier', 'nii.ashxier@gmail.com', 'pass'),
+('101002', 'Achilles', 'Delosmo', 'achilles.d@gmail.com', 'pass'),
+('101003', 'Charrese', 'Villanueva', 'char.v@gmail.com', 'pass'),
+('101004', 'Stephen', 'Bregole', 'stephen.b@gmail.com', 'pass'),
+('101005', 'Hyacint', 'Hayag', 'hyacinth.h@gmail.com', 'pass'),
+('101006', 'Jake', 'Calamba', 'jake.c@gmail.com', 'pass'),
+('101007', 'Louie', 'Lagmay', 'louie.l@gmail.com', 'pass'),
+('101008', 'Jhonrhane', 'Elarcosa', 'jhon.e@gmail.com', 'pass'),
+('101009', 'Renz', 'Bernardo', 'renz.b@gmail.com', 'pass'),
+('101010', 'Alice', 'Wonder', 'alice.w@gmail.com', 'pass');
+
+INSERT INTO students (student_id, first_name, last_name, grade_level, strand, section, adviser, contact_number, email) VALUES 
+('101001', 'Nii', 'Ashxier', 11, 'STEM', 'A', 'Mr. Tan', '09111111', 'nii.ashxier@gmail.com'),
+('101002', 'Achilles', 'Delosmo', 12, 'ICT', 'B', 'Ms. Lee', '09222222', 'achilles.d@gmail.com'),
+('101003', 'Charrese', 'Villanueva', 11, 'ABM', 'A', 'Mr. Tan', '09777777', 'char.v@gmail.com'),
+('101004', 'Stephen', 'Bregole', 12, 'HUMSS', 'C', 'Mrs. Go', '09333333', 'stephen.b@gmail.com'),
+('101005', 'Hyacint', 'Hayag', 11, 'STEM', 'A', 'Mr. Tan', '09444444', 'hyacinth.h@gmail.com'),
+('101006', 'Jake', 'Calamba', 11, 'ICT', 'B', 'Ms. Lee', '09555555', 'jake.c@gmail.com'),
+('101007', 'Louie', 'Lagmay', 12, 'GAS', 'D', 'Mr. Cruz', '09666666', 'louie.l@gmail.com'),
+('101008', 'Jhonrhane', 'Elarcosa', 11, 'STEM', 'A', 'Mr. Tan', '09888888', 'jhon.e@gmail.com'),
+('101009', 'Renz', 'Bernardo', 12, 'ICT', 'B', 'Ms. Lee', '09999999', 'renz.b@gmail.com'),
+('101010', 'Alice', 'Wonder', 11, 'HUMSS', 'C', 'Mrs. Go', '09000000', 'alice.w@gmail.com');

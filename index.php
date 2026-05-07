@@ -18,17 +18,27 @@ $recent_loans = $mysqli->query("SELECT * FROM borrowers WHERE status = 'Borrowed
         <input type="text" name="q" class="search-box" placeholder="Search by Title, Author, or ISBN...">
         <button type="submit" class="btn-search">Search Catalog</button>
     </form>
-</div>
 
-<!-- DIRIA ANG Dashboard Section -->
-<div class="container">
+    <div class="container">
     <div class="card">
         <h3>Library Overview</h3>
+        <p><strong>Active Student:</strong>
+        <?php 
+            // Counts students currently in the 'students' registry table
+            $res = $mysqli->query("SELECT COUNT(*) as total FROM students");
+            echo $res->fetch_assoc()['total'];
+        ?>
         <p><strong>Registered Students:</strong> <?php echo $student_count; ?></p>
         <p><strong>Total Books:</strong> <?php echo $total_books; ?></p>
         <p><strong>Currently Borrowed:</strong> <?php echo $borrowed_count; ?></p>
-        <p><strong>System Status:</strong> Operational</p>
+    </p>
     </div>
+    
+
 </div>
+
+</div>
+
+
 
 <?php include_once "footer.php"; ?>

@@ -33,7 +33,7 @@ $books_res = $mysqli->query("SELECT * FROM books ORDER BY title ASC");
 
                 <div style="width: 220px;">
                     <label style="font-size: 0.75rem; color: #666; font-weight: bold; display: block; margin-bottom: 5px;">Student ID</label>
-                    <input type="number" id="sid_input" name="student_id" placeholder="Type Student ID..." required 
+                    <input type="number" id="sid_input" name="student_id" placeholder="Type Student LRN/ID..." required 
                            style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; outline: none; box-sizing: border-box;">
                 </div>
 
@@ -54,14 +54,15 @@ $books_res = $mysqli->query("SELECT * FROM books ORDER BY title ASC");
 
 
                 <div id="student_display" style="flex: 1; display: none; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e0;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
-                        <div><small style="color:black;">Name:</small> <span id="s_name" style="font-weight: bold; color: var(--primary-blue);"></span></div>
-                        <div><small style="color:black;">Contact Nmber:</small> <span id="s_contact" style="font-weight: bold;"></span></div>
-                        <div><small style="color:black;">Course:</small> <span id="s_course" style="font-weight: bold;"></span></div>
-                        <div><small style="color:black;">Status:</small> <span style="color: green; font-weight: bold;">● Verified</span></div>
-                        <div><small style="color:black;">Gmail:</small> <span id="s_email" style="font-weight: bold;"></span></div>
-                    </div>
-                </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+        <div><small style="color:black;">Name:</small> <span id="s_name" style="font-weight: bold; color: var(--primary-blue);"></span></div>
+        <div><small style="color:black;">Grade & Strand:</small> <span id="s_level" style="font-weight: bold; color: #d63384;"></span></div>
+        <div><small style="color:black;">Section:</small> <span id="s_section" style="font-weight: bold;"></span></div>
+        <div><small style="color:black;">Adviser:</small> <span id="s_adviser" style="font-weight: bold;"></span></div>
+        <div><small style="color:black;">Contact:</small> <span id="s_contact" style="font-weight: bold;"></span></div>
+        <div><small style="color:black;">Status:</small> <span style="color: green; font-weight: bold;">● Verified</span></div>
+    </div>
+</div>
 
 
 
@@ -100,7 +101,7 @@ $books_res = $mysqli->query("SELECT * FROM books ORDER BY title ASC");
                 <?php while($row = $books_res->fetch_assoc()): 
                     $is_out = ($row['stocks'] <= 0);
                     $status_color = (!$is_out) ? '#28a745' : '#dc3545';
-                    $status_text = (!$is_out) ? 'Available ('.$row['stocks'].')' : 'Out of Stock';
+                    $status_text = (!$is_out) ? 'Available ('.$row['stocks'].')' : 'Unavailable';
                 ?>
                     <div class="book-select-card <?php echo $is_out ? 'out' : ''; ?>" 
                          onclick="toggleBook(this, <?php echo $row['id']; ?>)"
@@ -220,8 +221,10 @@ document.getElementById('sid_input').addEventListener('input', function() {
             if(data.success) {
                 document.getElementById('student_display').style.display = 'block';
                 document.getElementById('s_name').innerText = data.first_name + " " + data.last_name;
-                document.getElementById('s_course').innerText = data.course;
-                document.getElementById('s_email').innerText = data.email;
+                // Updated to show Grade and Strand
+                document.getElementById('s_level').innerText = "Grade " + data.grade_level + " (" + data.strand + ")";
+                document.getElementById('s_section').innerText = data.section;
+                document.getElementById('s_adviser').innerText = data.adviser;
                 document.getElementById('s_contact').innerText = data.contact_number;
             } else {
                 document.getElementById('student_display').style.display = 'none';
@@ -231,7 +234,6 @@ document.getElementById('sid_input').addEventListener('input', function() {
         document.getElementById('student_display').style.display = 'none';
     }
 });
-
 function toggleBook(card, id) {
     if(card.classList.contains('out')) return;
     card.classList.toggle('selected');

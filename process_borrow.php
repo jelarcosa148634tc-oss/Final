@@ -3,31 +3,37 @@ require_once "config.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $student_id = $mysqli->real_escape_string($_POST['student_id']);
-    $due_date = $mysqli->real_escape_string($_POST['due_date']); // GET THE DATE FROM YOUR FORM
-    $book_ids = $_POST['book_ids']; // This is the array of selected books
+    $due_date = $mysqli->real_escape_string($_POST['due_date']);
+    
+    // FIX: Use ?? [] to prevent the "Undefined array key" error
+    $book_ids = $_POST['book_ids'] ?? []; 
 
     if (!empty($book_ids)) {
-        foreach ($book_ids as $book_id) {
-            $book_id = intval($book_id);
-
-            // 1. Get the book title
-            $book_res = $mysqli->query("SELECT title FROM books WHERE id = $book_id");
-            $book_data = $book_res->fetch_assoc();
-            $book_title = $mysqli->real_escape_string($book_data['title']);
-
-            // 2. Bawas stock by 1
-            $mysqli->query("UPDATE books SET stocks = stocks - 1 WHERE id = $book_id");
-
-            // 3. MAG Insert into borrowers table WITH the due_date
-            $query = "INSERT INTO borrowers (student_id, book_borrowed, book_id, date_borrowed, due_date, status) 
-                      VALUES ('$student_id', '$book_title', $book_id, NOW(), '$due_date', 'Borrowed')";
+        foreach ($book_ids as $b_id) {
+            $b_id = intval($b_id);
             
-            $mysqli->query($query);
+            // 1. Fetch book title
+            $book_info = $mysqli->query("SELECT title FROM books WHERE id = $b_id")->fetch_assoc();
+            
+            if ($book_info) {
+                $book_title = $mysqli->real_escape_string($book_info['title']);
+
+                // 2. Insert transaction
+                $sql = "INSERT INTO borrowers (student_id, book_id, book_borrowed, date_borrowed, due_date, status) 
+                        VALUES ('$student_id', $b_id, '$book_title', NOW(), '$due_date', 'Borrowed')";
+                
+                if ($mysqli->query($sql)) {
+                    // 3. Update stocks
+                    $mysqli->query("UPDATE books SET stocks = stocks - 1 WHERE id = $b_id");
+                }
+            }
         }
         header("Location: borrowers.php?msg=success");
+        exit;
     } else {
-        header("Location: borrow_book.php?error=no_books");
+        // Handle the case where the user clicked "Confirm" without picking a book
+        echo "<script>alert('Error: Please select at least one book before confirming.'); window.history.back();</script>";
+        exit;
     }
-    exit;
 }
 ?>
